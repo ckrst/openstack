@@ -1,0 +1,13 @@
+name             'openstack'
+maintainer       'Vinícius Kirst'
+maintainer_email 'vinicius.kirst@gmail.com'
+license          'All rights reserved'
+description      'Installs/Configures openstack'
+long_description 'Installs/Configures openstack'
+version          '0.1.0'
+
+depends 'apt'
+depends 'rabbitmq'
+depends 'mysql', '~> 7.0'
+depends 'database'
+depends 'httpd', '~> 0.3'
