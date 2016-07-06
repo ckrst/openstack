@@ -7,11 +7,20 @@
 # All rights reserved - Do Not Redistribute
 #
 
-package 'software-properties-common'
+package 'software-properties-common' do
+    options '-y --force-yes'
+end
 
-apt_repository 'cloud-archive:mitaka'
+apt_repository 'cloudarchive-mitaka' do
+    uri 'http://ubuntu-cloud.archive.canonical.com/ubuntu'
+    distribution 'trusty-updates/mitaka'
+    components ['main']
+    action [:add]
+end
 
-package 'python-openstackclient'
+package 'python-openstackclient' do
+    options '-y --force-yes'
+end
 
 # DB
 
@@ -26,6 +35,10 @@ mysql_config 'openstack_defaults' do
     source 'my_extra_settings.erb'
     notifies :restart, 'mysql_service[default]'
     action :create
+end
+
+mysql2_chef_gem 'default' do
+    action :install
 end
 
 mysql_connection_info = {
@@ -76,17 +89,84 @@ mysql_database_user 'keystone' do
   action        :grant
 end
 
-package 'keystone'
-
-#APACHE
-httpd_service 'default' do
-    servername 'controller'
-  action [:create, :start]
+file '/etc/init/keystone.override' do
+    content 'manual'
 end
 
-httpd_config 'wsgi-keystone' do
-  source 'wsgi-keystone.erb'
-  action :create
+package 'keystone' do
+    options '--force-yes'
+end
+
+#APACHE
+# httpd_service 'default' do
+#     servername 'controller'
+#   action [:create, :start]
+# end
+#
+# httpd_config 'wsgi-keystone' do
+#   source 'wsgi-keystone.erb'
+#   action :create
+# end
+
+#include_recipe "apache2"
+
+package 'apache2' do
+    options '--force-yes'
+    action :install
+end
+package 'libapache2-mod-wsgi' do
+    options '--force-yes'
+    action :install
+end
+
+# web_app "wsgi-keystone" do
+#   template 'wsgi-keystone.erb'
+#   server_name 'controller'
+# end
+
+file '/etc/apache2/sites-available/wsgi-keystone.conf' do
+    content '
+Listen 5000
+Listen 35357
+
+<VirtualHost *:5000>
+    WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+    WSGIProcessGroup keystone-public
+    WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/keystone.log
+    CustomLog /var/log/apache2/keystone_access.log combined
+
+    <Directory /usr/bin>
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+<VirtualHost *:35357>
+    WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+    WSGIProcessGroup keystone-admin
+    WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/keystone.log
+    CustomLog /var/log/apache2/keystone_access.log combined
+
+    <Directory /usr/bin>
+        Require all granted
+    </Directory>
+</VirtualHost>'
+end
+
+link '/etc/apache2/sites-enabled/wsgi-keystone.conf' do
+  to '/etc/apache2/sites-available/wsgi-keystone.conf'
+  link_type :symbolic
+end
+
+service "apache2" do
+  action [:restart]
 end
 
 # By default, the Ubuntu packages create an SQLite database. Because this configuration uses an SQL database server, you can remove the SQLite database file:
@@ -124,7 +204,9 @@ mysql_database_user 'glance' do
   action        :grant
 end
 
-package 'glance'
+package 'glance' do
+    options '-y --force-yes'
+end
 
 
 
@@ -183,11 +265,21 @@ mysql_database_user 'nova' do
   action        :grant
 end
 
-package 'nova-api'
-package 'nova-conductor'
-package 'nova-consoleauth'
-package 'nova-novncproxy'
-package 'nova-scheduler'
+package 'nova-api' do
+    options '-y --force-yes'
+end
+package 'nova-conductor' do
+    options '-y --force-yes'
+end
+package 'nova-consoleauth' do
+    options '-y --force-yes'
+end
+package 'nova-novncproxy' do
+    options '-y --force-yes'
+end
+package 'nova-scheduler' do
+    options '-y --force-yes'
+end
 
 # TODO Neutron
 
@@ -218,15 +310,29 @@ mysql_database_user 'neutron' do
   action        :grant
 end
 
-package 'neutron-server'
-package 'neutron-plugin-ml2'
-package 'neutron-linuxbridge-agent'
-package 'neutron-dhcp-agent'
-package 'neutron-metadata-agent'
-package 'neutron-l3-agent'
+package 'neutron-server' do
+    options '-y --force-yes'
+end
+package 'neutron-plugin-ml2' do
+    options '-y --force-yes'
+end
+package 'neutron-linuxbridge-agent' do
+    options '-y --force-yes'
+end
+package 'neutron-dhcp-agent' do
+    options '-y --force-yes'
+end
+package 'neutron-metadata-agent' do
+    options '-y --force-yes'
+end
+package 'neutron-l3-agent' do
+    options '-y --force-yes'
+end
 
 # TODO Dashboard
-package 'openstack-dashboard'
+package 'openstack-dashboard' do
+    options '-y --force-yes'
+end
 
 # TODO Cinder
 
@@ -257,5 +363,9 @@ mysql_database_user 'cinder' do
   action        :grant
 end
 
-package 'cinder-api'
-package 'cinder-scheduler'
+package 'cinder-api' do
+    options '-y --force-yes'
+end
+package 'cinder-scheduler' do
+    options '-y --force-yes'
+end
