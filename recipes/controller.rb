@@ -7,6 +7,16 @@
 # All rights reserved - Do Not Redistribute
 #
 
+hostsfile_entry '10.0.0.31' do
+    hostname 'compute1'
+    action :create_if_missing
+end
+
+hostsfile_entry '10.0.0.41' do
+    hostname 'block1'
+    action :create_if_missing
+end
+
 package 'software-properties-common' do
     options '-y --force-yes'
 end
@@ -95,6 +105,103 @@ end
 
 package 'keystone' do
     options '--force-yes'
+end
+
+file '/etc/keystone/keystone.conf' do
+    content '
+[DEFAULT]
+
+admin_token = 71e444e5726be697906c
+
+log_dir = /var/log/keystone
+
+[assignment]
+
+[auth]
+
+[cache]
+
+[catalog]
+
+[cors]
+
+[cors.subdomain]
+
+[credential]
+
+[database]
+
+connection = mysql+pymysql://keystone:secret@127.0.0.1/keystone
+
+[domain_config]
+
+[endpoint_filter]
+
+[endpoint_policy]
+
+[eventlet_server]
+
+[eventlet_server_ssl]
+
+[federation]
+
+[fernet_tokens]
+
+[identity]
+
+[identity_mapping]
+
+[kvs]
+
+[ldap]
+
+[matchmaker_redis]
+
+[memcache]
+
+[oauth1]
+
+[os_inherit]
+
+[oslo_messaging_amqp]
+
+[oslo_messaging_notifications]
+
+[oslo_messaging_rabbit]
+
+[oslo_middleware]
+
+[oslo_policy]
+
+[paste_deploy]
+
+[policy]
+
+[resource]
+
+[revoke]
+
+[role]
+
+[saml]
+
+[shadow_users]
+
+[signing]
+
+[ssl]
+
+[token]
+
+provider = fernet
+
+[tokenless_auth]
+
+[trust]
+
+[extra_headers]
+Distribution = Ubuntu
+'
 end
 
 #APACHE
