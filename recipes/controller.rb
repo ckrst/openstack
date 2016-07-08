@@ -69,16 +69,40 @@ rabbitmq_user "openstack" do
   action :set_permissions
 end
 
+file '/home/vagrant/admin-openrc' do
+    content '
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+export OS_PROJECT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD=secret
+export OS_AUTH_URL=http://controller:35357/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2
+'
+end
+
+file '/home/vagrant/demo-openrc' do
+    content '
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+export OS_PROJECT_NAME=demo
+export OS_USERNAME=demo
+export OS_PASSWORD=secret
+export OS_AUTH_URL=http://controller:5000/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2'
+end
 
 
 # Nova
-include_recipe "openstack::nova"
-
-# Neutron
-include_recipe "openstack::neutron"
-
-# Dashboard
-include_recipe "openstack::horizon"
-
-# Cinder
-include_recipe "openstack::cinder"
+# include_recipe "openstack::nova"
+#
+# # Neutron
+# include_recipe "openstack::neutron"
+#
+# # Dashboard
+# include_recipe "openstack::horizon"
+#
+# # Cinder
+# include_recipe "openstack::cinder"

@@ -1,3 +1,9 @@
+mysql_connection_info = {
+    :host     => '127.0.0.1',
+    :username => 'root',
+    :password => 'secret'
+}
+
 mysql_database 'cinder' do
   connection mysql_connection_info
   action :create

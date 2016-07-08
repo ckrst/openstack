@@ -1,4 +1,8 @@
-
+mysql_connection_info = {
+    :host     => '127.0.0.1',
+    :username => 'root',
+    :password => 'secret'
+}
 mysql_database 'glance' do
   connection mysql_connection_info
   action :create
@@ -39,11 +43,9 @@ file '/etc/glance/glance-api.conf' do
 
 [database]
 
-connection = mysql+pymysql://glance:GLANCE_DBPASS@controller/glance
-
 # sqlite_db = /var/lib/glance/glance.sqlite
 # backend = sqlalchemy
-connection = mysql+pymysql://glance:GLANCE_DBPASS@controller/glance
+connection = mysql+pymysql://glance:secret@127.0.0.1/glance
 
 [glance_store]
 
