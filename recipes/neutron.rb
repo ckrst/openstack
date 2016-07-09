@@ -166,7 +166,7 @@ file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
 [agent]
 
 [linux_bridge]
-physical_interface_mappings = provider:PROVIDER_INTERFACE_NAME
+physical_interface_mappings = provider:eth1
 
 [securitygroup]
 enable_security_group = True
