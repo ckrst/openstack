@@ -6,7 +6,7 @@
 keystone_test_env = {
     "OS_TOKEN"                  => node['openstack']['admin_token'],
     "OS_URL"                    => "http://controller:35357/v3",
-    "OS_IDENTITY_API_VERSION"   => 3
+    "OS_IDENTITY_API_VERSION"   => "3"
 }
 
 admin_env = {
@@ -68,7 +68,7 @@ end
 
 # Create the service entity for the Identity service
 execute 'create_keystone_entity' do
-    command 'openstack service create --name keystone --description "OpenStack Identity" identity'
+    command "openstack service create --name keystone --description \"OpenStack Identity\" identity"
     environment keystone_test_env
 end
 
