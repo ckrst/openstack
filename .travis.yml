@@ -1,0 +1,20 @@
+language: ruby
+rvm:
+  - 1.9.3
+
+env:
+  global:
+  - PATH="/opt/chefdk/bin:/opt/chefdk/embedded/bin:/opt/chef/bin:$PATH"
+
+addons:
+  apt:
+    sources:
+    - chef-stable-precise
+    packages:
+    - chefdk
+
+install: gem install rspec
+
+script:
+- foodcritic .
+- chef exec rspec .

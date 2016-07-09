@@ -29,7 +29,7 @@ apt_repository 'cloudarchive-mitaka' do
 end
 
 package 'python-openstackclient' do
-    options '-y --force-yes'
+    options '--force-yes'
 end
 
 # DB
@@ -37,7 +37,7 @@ end
 mysql_service 'default' do
     port '3306'
     version '5.6'
-    initial_root_password 'secret'
+    initial_root_password node['openstack']['db']['root_password']
     action [:create, :start]
 end
 
@@ -52,25 +52,27 @@ mysql2_chef_gem 'default' do
 end
 
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
 
 # RABBITMQ
 
-rabbitmq_user "openstack" do
-  password "secret"
+rabbitmq_user node['openstack']['rabbitmq']['user'] do
+  password node['openstack']['rabbitmq']['password']
   action :add
 end
-rabbitmq_user "openstack" do
+rabbitmq_user node['openstack']['rabbitmq']['user'] do
   vhost "/"
   permissions ".* .* .*"
   action :set_permissions
 end
 
+
+
 file '/home/vagrant/admin-openrc' do
-    content '
+    content "
 export OS_PROJECT_DOMAIN_NAME=default
 export OS_USER_DOMAIN_NAME=default
 export OS_PROJECT_NAME=admin
@@ -79,11 +81,11 @@ export OS_PASSWORD=secret
 export OS_AUTH_URL=http://controller:35357/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
-'
+"
 end
 
 file '/home/vagrant/demo-openrc' do
-    content '
+    content "
 export OS_PROJECT_DOMAIN_NAME=default
 export OS_USER_DOMAIN_NAME=default
 export OS_PROJECT_NAME=demo
@@ -91,7 +93,8 @@ export OS_USERNAME=demo
 export OS_PASSWORD=secret
 export OS_AUTH_URL=http://controller:5000/v3
 export OS_IDENTITY_API_VERSION=3
-export OS_IMAGE_API_VERSION=2'
+export OS_IMAGE_API_VERSION=2
+"
 end
 
 

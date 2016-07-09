@@ -1,57 +1,53 @@
+tag 'nova'
+
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
 
-mysql_database 'nova_api' do
+mysql_database node['openstack']['nova']['db_name'] do
   connection mysql_connection_info
   action :create
 end
-
-mysql_database 'nova' do
-  connection mysql_connection_info
-  action :create
+mysql_database node['openstack']['nova_api']['db_name'] do
+    connection mysql_connection_info
+    action :create
 end
 
-mysql_database_user 'nova' do
+mysql_database_user node['openstack']['nova']['db_user'] do
   connection mysql_connection_info
-  password   'secret'
+  password   node['openstack']['nova']['db_pass']
   action     :create
 end
-mysql_database_user 'nova' do
+mysql_database_user node['openstack']['nova']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'nova'
+  password      node['openstack']['nova']['db_pass']
+  database_name node['openstack']['nova']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'nova' do
+mysql_database_user node['openstack']['nova']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'nova'
+  password      node['openstack']['nova']['db_pass']
+  database_name node['openstack']['nova']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'nova' do
-  connection mysql_connection_info
-  password   'secret'
-  action     :create
-end
-mysql_database_user 'nova' do
+mysql_database_user node['openstack']['nova']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'nova_api'
+  password      node['openstack']['nova']['db_pass']
+  database_name node['openstack']['nova_api']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'nova' do
+mysql_database_user node['openstack']['nova']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'nova_api'
+  password      node['openstack']['nova']['db_pass']
+  database_name node['openstack']['nova_api']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant
@@ -74,7 +70,7 @@ package 'nova-scheduler' do
 end
 
 file '/etc/nova/nova.conf' do
-    content '
+    content "
 [DEFAULT]
 dhcpbridge_flagfile=/etc/nova/nova.conf
 dhcpbridge=/usr/bin/nova-dhcpbridge
@@ -95,10 +91,10 @@ use_neutron=True
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 [api_database]
-connection = mysql+pymysql://nova:secret@127.0.0.1/nova_api
+connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova_api']['db_name']}
 
 [database]
-connection = mysql+pymysql://nova:secret@127.0.0.1/nova
+connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova']['db_name']}
 
 [oslo_messaging_rabbit]
 rabbit_host=controller
@@ -116,8 +112,8 @@ auth_type=password
 project_domain_name=default
 user_domain_name=default
 project_name=service
-username=nova
-password=secret
+username = #{node['openstack']['nova']['username']}
+password = #{node['openstack']['nova']['password']}
 
 [vnc]
 vncserver_listen = $my_ip
@@ -134,10 +130,10 @@ project_domain_name = default
 user_domain_name = default
 region_name = RegionOne
 project_name = service
-username = neutron
-password = secret
+username = #{node['openstack']['neutron']['username']}
+password = #{node['openstack']['neutron']['password']}
 
 service_metadata_proxy = True
 metadata_proxy_shared_secret = secret
-'
+"
 end

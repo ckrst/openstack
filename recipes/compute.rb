@@ -1,6 +1,19 @@
+tag 'computeNode'
 #
 
-package 'nova-compute'
+hostsfile_entry '10.0.0.11' do
+    hostname 'controller'
+    action :create_if_missing
+end
+
+hostsfile_entry '10.0.0.41' do
+    hostname 'block1'
+    action :create_if_missing
+end
+
+package 'nova-compute' do
+    options '--force-yes'
+end
 
 # TODO: full nova.conf content
 file '/etc/nova/nova.conf' do
@@ -54,7 +67,19 @@ password = secret
 '
 end
 
-package 'neutron-linuxbridge-agent'
+file '/etc/nova/nova-compute.conf' do
+    content '
+[libvirt]
+virt_type = qemu
+'
+end
+
+
+# NEUTRON
+
+package 'neutron-linuxbridge-agent' do
+    options '--force-yes'
+end
 
 file '/etc/neutron/neutron.conf' do
     content '
@@ -83,6 +108,15 @@ end
 file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
     content '
 [linux_bridge]
-physical_interface_mappings = provider:PROVIDER_INTERFACE_NAME
+physical_interface_mappings = provider:eth0
+
+[vxlan]
+enable_vxlan = True
+local_ip = 10.0.0.31
+l2_population = True
+
+[securitygroup]
+enable_security_group = True
+firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 '
 end

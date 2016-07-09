@@ -1,31 +1,33 @@
+tag 'cinder'
+
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
 
-mysql_database 'cinder' do
+mysql_database node['openstack']['cinder']['db_name'] do
   connection mysql_connection_info
   action :create
 end
 
-mysql_database_user 'cinder' do
+mysql_database_user node['openstack']['cinder']['db_user'] do
   connection mysql_connection_info
-  password   'secret'
+  password   node['openstack']['cinder']['db_pass']
   action     :create
 end
-mysql_database_user 'cinder' do
+mysql_database_user node['openstack']['cinder']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'cinder'
+  password      node['openstack']['cinder']['db_pass']
+  database_name node['openstack']['cinder']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'cinder' do
+mysql_database_user node['openstack']['cinder']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'cinder'
+  password      node['openstack']['cinder']['db_pass']
+  database_name node['openstack']['cinder']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant

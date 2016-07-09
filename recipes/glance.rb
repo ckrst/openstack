@@ -1,30 +1,33 @@
+tag 'glance'
+
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
-mysql_database 'glance' do
+
+mysql_database node['openstack']['glance']['db_name'] do
   connection mysql_connection_info
   action :create
 end
 
-mysql_database_user 'glance' do
+mysql_database_user node['openstack']['glance']['db_user'] do
   connection mysql_connection_info
-  password   'secret'
+  password   node['openstack']['glance']['db_pass']
   action     :create
 end
-mysql_database_user 'glance' do
+mysql_database_user node['openstack']['glance']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'glance'
+  password      node['openstack']['glance']['db_pass']
+  database_name node['openstack']['glance']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'glance' do
+mysql_database_user node['openstack']['glance']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'glance'
+  password      node['openstack']['glance']['db_pass']
+  database_name node['openstack']['glance']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant
@@ -35,7 +38,7 @@ package 'glance' do
 end
 
 file '/etc/glance/glance-api.conf' do
-    content '[DEFAULT]
+    content "[DEFAULT]
 
 [cors]
 
@@ -45,7 +48,7 @@ file '/etc/glance/glance-api.conf' do
 
 # sqlite_db = /var/lib/glance/glance.sqlite
 # backend = sqlalchemy
-connection = mysql+pymysql://glance:secret@127.0.0.1/glance
+connection = mysql+pymysql://#{node['openstack']['glance']['db_user']}:#{node['openstack']['glance']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['glance']['db_name']}
 
 [glance_store]
 
@@ -66,8 +69,8 @@ auth_type = password
 project_domain_name = default
 user_domain_name = default
 project_name = service
-username = glance
-password = secret
+username = #{node['openstack']['glance']['username']}
+password = #{node['openstack']['glance']['password']}
 
 [matchmaker_redis]
 
@@ -93,18 +96,18 @@ flavor = keystone
 
 [taskflow_executor]
 
-'
+"
 end
 
 file '/etc/glance/glance-registry.conf' do
-    content '
+    content "
 [DEFAULT]
 
 [database]
 
 # sqlite_db = /var/lib/glance/glance.sqlite
 # backend = sqlalchemy
-connection = mysql+pymysql://glance:secret@127.0.0.1/glance
+connection = mysql+pymysql://#{node['openstack']['glance']['db_user']}:#{node['openstack']['glance']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['glance']['db_name']}
 
 [glance_store]
 
@@ -117,8 +120,8 @@ auth_type = password
 project_domain_name = default
 user_domain_name = default
 project_name = service
-username = glance
-password = secret
+username = #{node['openstack']['glance']['username']}
+password = #{node['openstack']['glance']['password']}
 
 [matchmaker_redis]
 
@@ -135,5 +138,5 @@ password = secret
 flavor = keystone
 
 [profiler]
-'
+"
 end

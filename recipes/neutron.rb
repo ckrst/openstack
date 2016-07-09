@@ -1,30 +1,33 @@
+tag 'neutron'
+
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
-mysql_database 'neutron' do
+
+mysql_database node['openstack']['neutron']['db_name'] do
   connection mysql_connection_info
   action :create
 end
 
-mysql_database_user 'neutron' do
+mysql_database_user node['openstack']['neutron']['db_user'] do
   connection mysql_connection_info
-  password   'secret'
+  password   node['openstack']['neutron']['db_pass']
   action     :create
 end
-mysql_database_user 'neutron' do
+mysql_database_user node['openstack']['neutron']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'neutron'
+  password      node['openstack']['neutron']['db_pass']
+  database_name node['openstack']['neutron']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'neutron' do
+mysql_database_user node['openstack']['neutron']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'neutron'
+  password      node['openstack']['neutron']['db_pass']
+  database_name node['openstack']['neutron']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant
@@ -60,7 +63,7 @@ metadata_proxy_shared_secret = secret
 end
 
 file '/etc/neutron/neutron.conf' do
-    content '
+    content "
 [DEFAULT]
 
 core_plugin = ml2
@@ -81,7 +84,7 @@ root_helper = sudo /usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf
 
 [database]
 
-connection = mysql+pymysql://neutron:secret@127.0.0.1/neutron
+connection = mysql+pymysql://#{node['openstack']['neutron']['db_user']}:#{node['openstack']['neutron']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['neutron']['db_name']}
 
 [keystone_authtoken]
 
@@ -92,8 +95,8 @@ auth_type = password
 project_domain_name = default
 user_domain_name = default
 project_name = service
-username = neutron
-password = secret
+username = #{node['openstack']['neutron']['username']}
+password = #{node['openstack']['neutron']['password']}
 
 [matchmaker_redis]
 
@@ -105,8 +108,8 @@ project_domain_name = default
 user_domain_name = default
 region_name = RegionOne
 project_name = service
-username = nova
-password = secret
+username = #{node['openstack']['nova']['username']}
+password = #{node['openstack']['nova']['password']}
 
 [oslo_concurrency]
 
@@ -125,11 +128,11 @@ rabbit_password = secret
 [quotas]
 
 [ssl]
-'
+"
 end
 
 file '/etc/neutron/plugins/ml2/ml2_conf.ini' do
-    content '
+    content "
 [DEFAULT]
 
 [ml2]
@@ -156,11 +159,11 @@ vni_ranges = 1:1000
 [securitygroup]
 
 enable_ipset = True
-'
+"
 end
 
 file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
-    content '
+    content "
 [DEFAULT]
 
 [agent]
@@ -176,7 +179,7 @@ firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 enable_vxlan = True
 local_ip = 10.0.0.11
 l2_population = True
-'
+"
 end
 
 

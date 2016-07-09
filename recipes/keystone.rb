@@ -1,30 +1,33 @@
+tag 'keystone'
+
 mysql_connection_info = {
-    :host     => '127.0.0.1',
+    :host     => node['openstack']['db']['host'],
     :username => 'root',
-    :password => 'secret'
+    :password => node['openstack']['db']['root_password']
 }
-mysql_database 'keystone' do
+
+mysql_database node['openstack']['keystone']['db_name'] do
   connection mysql_connection_info
   action :create
 end
 
-mysql_database_user 'keystone' do
+mysql_database_user node['openstack']['keystone']['db_user'] do
   connection mysql_connection_info
-  password   'secret'
+  password   node['openstack']['keystone']['db_pass']
   action     :create
 end
-mysql_database_user 'keystone' do
+mysql_database_user node['openstack']['keystone']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'keystone'
+  password      node['openstack']['keystone']['db_pass']
+  database_name node['openstack']['keystone']['db_name']
   host          '%'
   privileges    [:all]
   action        :grant
 end
-mysql_database_user 'keystone' do
+mysql_database_user node['openstack']['keystone']['db_user'] do
   connection    mysql_connection_info
-  password      'secret'
-  database_name 'keystone'
+  password      node['openstack']['keystone']['db_pass']
+  database_name node['openstack']['keystone']['db_name']
   host          'localhost'
   privileges    [:all]
   action        :grant
@@ -39,10 +42,10 @@ package 'keystone' do
 end
 
 file '/etc/keystone/keystone.conf' do
-    content '
+    content "
 [DEFAULT]
 
-admin_token = 71e444e5726be697906c
+admin_token = #{node['openstack']['admin_token']}
 
 log_dir = /var/log/keystone
 
@@ -62,7 +65,7 @@ log_dir = /var/log/keystone
 
 [database]
 
-connection = mysql+pymysql://keystone:secret@127.0.0.1/keystone
+connection = mysql+pymysql://#{node['openstack']['keystone']['db_user']}:#{node['openstack']['keystone']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['keystone']['db_name']}
 
 [domain_config]
 
@@ -132,22 +135,10 @@ provider = fernet
 
 [extra_headers]
 Distribution = Ubuntu
-'
+"
 end
 
 #APACHE
-# httpd_service 'default' do
-#     servername 'controller'
-#   action [:create, :start]
-# end
-#
-# httpd_config 'wsgi-keystone' do
-#   source 'wsgi-keystone.erb'
-#   action :create
-# end
-
-#include_recipe "apache2"
-
 package 'apache2' do
     options '--force-yes'
     action :install
@@ -156,11 +147,6 @@ package 'libapache2-mod-wsgi' do
     options '--force-yes'
     action :install
 end
-
-# web_app "wsgi-keystone" do
-#   template 'wsgi-keystone.erb'
-#   server_name 'controller'
-# end
 
 file '/etc/apache2/sites-available/wsgi-keystone.conf' do
     content '
