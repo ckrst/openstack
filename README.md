@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/vinik/openstack.svg?branch=master)](https://travis-ci.org/vinik/openstack)
+
 # openstack-cookbook
 
 TODO: Enter the cookbook description here.

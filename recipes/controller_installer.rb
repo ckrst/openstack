@@ -34,12 +34,8 @@ user_env = {
 
 include_recipe "openstack::controller"
 
-execute 'finalize_mongo' do
-    command [
-        "service mongodb stop",
-        "rm /var/lib/mongodb/journal/prealloc.*",
-        "service mongodb start"
-    ]
+service 'mongodb' do
+    action [ :restart ]
 end
 
 service 'memcached' do
@@ -172,7 +168,7 @@ execute 'glance_endpoints' do
         "openstack endpoint create --region RegionOne image internal http://controller:9292",
         "openstack endpoint create --region RegionOne image admin http://controller:9292"
     ]
-
+    environment admin_env
 end
 
 # Populate the Image service database:
@@ -206,3 +202,134 @@ end
 ###########################
 # NOVA
 ###########################
+
+include_recipe "openstack::nova"
+
+# create the service credentials
+execute 'nova_service_credentials' do
+    command [
+        # Create the nova user:
+        "openstack user create --domain default --password \"#{node['openstack']['nova']['password']}\" #{node['openstack']['nova']['username']}",
+        # Add the admin role to the nova user:
+        "openstack role add --project service --user #{node['openstack']['nova']['username']} admin",
+        # Create the nova service entity:
+        "openstack service create --name nova --description \"OpenStack Compute\" compute"
+    ]
+    environment admin_env
+end
+
+# Create the Compute service API endpoints:
+execute 'glance_endpoints' do
+    command [
+        "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s",
+        "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s",
+        "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s"
+    ]
+    environment admin_env
+end
+# Populate the Compute databases:
+execute 'populate_nova_db' do
+    command [
+        "su -s /bin/sh -c \"nova-manage api_db sync\" nova",
+        "su -s /bin/sh -c \"nova-manage db sync\" nova"
+    ]
+    environment admin_env
+end
+# Finalize installation
+service 'nova-api' do
+    action [ :restart ]
+end
+service 'nova-consoleauth' do
+    action [ :restart ]
+end
+service 'nova-scheduler' do
+    action [ :restart ]
+end
+service 'nova-conductor' do
+    action [ :restart ]
+end
+service 'nova-novncproxy' do
+    action [ :restart ]
+end
+
+# Verify operation
+execute 'verify_nova_operation' do
+    command "openstack compute service list"
+    environment admin_env
+end
+
+
+###########################
+# NEUTRON
+###########################
+
+include_recipe "openstack::neutron"
+
+# create the service credentials
+execute 'neutron_service_credentials' do
+    command [
+        # Create the neutron user:
+        "openstack user create --domain default --password \"#{node['openstack']['neutron']['password']}\" #{node['openstack']['neutron']['username']}",
+        # Add the admin role to the neutron user:
+        "openstack role add --project service --user #{node['openstack']['neutron']['username']} admin",
+        # Create the neutron service entity:
+        "openstack service create --name neutron --description \"OpenStack Networking\" network"
+    ]
+    environment admin_env
+end
+
+# Create the Networking service API endpoints:
+execute 'neutron_endpoints' do
+    command [
+        "openstack endpoint create --region RegionOne network public http://controller:9696",
+        "openstack endpoint create --region RegionOne network internal http://controller:9696",
+        "openstack endpoint create --region RegionOne network admin http://controller:9696"
+    ]
+    environment admin_env
+end
+
+# Finalize installation
+# Populate the database:
+execute 'populate_neutron_db' do
+    command "su -s /bin/sh -c \"neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head\" neutron"
+    environment admin_env
+end
+
+service 'nova-api' do
+    action [ :restart ]
+end
+service 'neutron-server' do
+    action [ :restart ]
+end
+service 'neutron-linuxbridge-agent' do
+    action [ :restart ]
+end
+service 'neutron-dhcp-agent' do
+    action [ :restart ]
+end
+service 'neutron-metadata-agent' do
+    action [ :restart ]
+end
+service 'neutron-l3-agent' do
+    action [ :restart ]
+end
+
+
+# Verify operation
+execute 'neutron_loaded_extensionts' do
+    command [
+        "neutron ext-list",
+        "neutron agent-list"
+    ]
+    environment admin_env
+end
+
+###########################
+# HORIZON
+###########################
+
+include_recipe "openstack::horizon"
+
+service 'apache2' do
+    action [ :reload ]
+end
