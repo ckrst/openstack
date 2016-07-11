@@ -11,6 +11,13 @@ hostsfile_entry '10.0.0.41' do
     action :create_if_missing
 end
 
+apt_repository 'cloudarchive-mitaka' do
+    uri 'http://ubuntu-cloud.archive.canonical.com/ubuntu'
+    distribution 'trusty-updates/mitaka'
+    components ['main']
+    action [:add]
+end
+
 package 'nova-compute' do
     options '--force-yes'
 end
