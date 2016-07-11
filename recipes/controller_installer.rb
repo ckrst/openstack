@@ -73,12 +73,16 @@ execute 'create_keystone_entity' do
 end
 
 # Create the Identity service API endpoints
-execute 'create_keystone_endpoints' do
-    command [
-        'openstack endpoint create --region RegionOne identity public http://controller:5000/v3',
-        'openstack endpoint create --region RegionOne identity internal http://controller:5000/v3',
-        'openstack endpoint create --region RegionOne identity admin http://controller:35357/v3'
-    ]
+execute 'create_keystone_public_endpoint' do
+    command 'openstack endpoint create --region RegionOne identity public http://controller:5000/v3'
+    environment keystone_test_env
+end
+execute 'create_keystone_internal_endpoint' do
+    command 'openstack endpoint create --region RegionOne identity internal http://controller:5000/v3'
+    environment keystone_test_env
+end
+execute 'create_keystone_admin_endpoint' do
+    command 'openstack endpoint create --region RegionOne identity admin http://controller:35357/v3'
     environment keystone_test_env
 end
 
@@ -92,17 +96,26 @@ end
 
 
 # Create an administrative project, user, and role for administrative operations in your environment
-execute 'create_admin' do
-    command [
-        # Create the admin project:
-        'openstack project create --domain default --description "Admin Project" admin',
-        # Create the admin user:
-        "openstack user create --domain default --password \"#{node['openstack']['admin_password']}\" #{node['openstack']['admin_user']}",
-        # Create the admin role:
-        'openstack role create admin',
-        # Add the admin role to the admin project and user:
-        "openstack role add --project admin --user #{node['openstack']['admin_user']} admin"
-    ]
+# Create the admin project:
+execute 'create_admin_project' do
+    command 'openstack project create --domain default --description "Admin Project" admin'
+    environment keystone_test_env
+end
+# Create the admin user:
+execute 'create_admin_user' do
+    command "openstack user create --domain default --password \"#{node['openstack']['admin_password']}\" #{node['openstack']['admin_user']}",
+    environment keystone_test_env
+end
+
+# Create the admin role:
+execute 'create_admin_role' do
+    command 'openstack role create admin'
+    environment keystone_test_env
+end
+
+# Add the admin role to the admin project and user:
+execute 'bind_admin_role' do
+    command "openstack role add --project admin --user #{node['openstack']['admin_user']} admin"
     environment keystone_test_env
 end
 
@@ -115,17 +128,24 @@ end
 
 # Regular (non-admin) tasks should use an unprivileged project and user.
 # As an example, this guide creates the demo project and user.
-execute 'create_user' do
-    command [
-        # Create the demo project:
-        'openstack project create --domain default --description "User Project" demo',
-        # Create the demo user:
-        'openstack user create --domain default --password "secret" demo',
-        # Create the user role:
-        'openstack role create user',
-        # Add the user role to the demo project and user:
-        'openstack role add --project demo --user demo user'
-    ]
+# Create the demo project:
+execute 'create_demo_project' do
+    command 'openstack project create --domain default --description "User Project" demo'
+    environment keystone_test_env
+end
+# Create the demo user:
+execute 'create_demo_user' do
+    command 'openstack user create --domain default --password "secret" demo'
+    environment keystone_test_env
+end
+# Create the user role:
+execute 'create_user_role' do
+    command 'openstack role create user'
+    environment keystone_test_env
+end
+# Add the user role to the demo project and user:
+execute 'bind_user_role' do
+    command 'openstack role add --project demo --user demo user'
     environment keystone_test_env
 end
 
@@ -149,25 +169,33 @@ end
 include_recipe 'openstack::glance'
 
 # create the service credentials
-execute 'glance_service_credentials' do
-    command [
-        # Create the glance user:
-        "openstack user create --domain default --password \"#{node['openstack']['glance']['password']}\" #{node['openstack']['glance']['username']}",
-        # Add the admin role to the glance user and service project:
-        "openstack role add --project service --user #{node['openstack']['glance']['username']} admin",
-        # Create the glance service entity:
-        "openstack service create --name glance --description \"OpenStack Image\" image"
-    ]
+# Create the glance user:
+execute 'glance_user' do
+    command "openstack user create --domain default --password \"#{node['openstack']['glance']['password']}\" #{node['openstack']['glance']['username']}",
+    environment admin_env
+end
+# Add the admin role to the glance user and service project:
+execute 'bind_glance_role' do
+    command "openstack role add --project service --user #{node['openstack']['glance']['username']} admin"
+    environment admin_env
+end
+# Create the glance service entity:
+execute 'glance_service_entity' do
+    command "openstack service create --name glance --description \"OpenStack Image\" image"
     environment admin_env
 end
 
 # Create the Image service API endpoints:
-execute 'glance_endpoints' do
-    command [
-        "openstack endpoint create --region RegionOne image public http://controller:9292",
-        "openstack endpoint create --region RegionOne image internal http://controller:9292",
-        "openstack endpoint create --region RegionOne image admin http://controller:9292"
-    ]
+execute 'glance_endpoint_public' do
+    command "openstack endpoint create --region RegionOne image public http://controller:9292"
+    environment admin_env
+end
+execute 'glance_endpoint_internal' do
+    command "openstack endpoint create --region RegionOne image internal http://controller:9292"
+    environment admin_env
+end
+execute 'glance_endpoint_admin' do
+    command "openstack endpoint create --region RegionOne image admin http://controller:9292"
     environment admin_env
 end
 
@@ -192,10 +220,11 @@ remote_file '/glance_images/trusty-server-cloudimg-amd64-disk1.img' do
   action :create
 end
 execute 'import_ubuntu' do
-    command [
-        "openstack image create \"ubuntu\" --file /glance_images/trusty-server-cloudimg-amd64-disk1.img --disk-format qcow2 --container-format bare --public",
-        "openstack image list"
-    ]
+    command "openstack image create \"ubuntu\" --file /glance_images/trusty-server-cloudimg-amd64-disk1.img --disk-format qcow2 --container-format bare --public"
+    environment admin_env
+end
+execute 'glance_image_list' do
+    command "openstack image list"
     environment admin_env
 end
 
@@ -206,33 +235,42 @@ end
 include_recipe "openstack::nova"
 
 # create the service credentials
-execute 'nova_service_credentials' do
-    command [
-        # Create the nova user:
-        "openstack user create --domain default --password \"#{node['openstack']['nova']['password']}\" #{node['openstack']['nova']['username']}",
-        # Add the admin role to the nova user:
-        "openstack role add --project service --user #{node['openstack']['nova']['username']} admin",
-        # Create the nova service entity:
-        "openstack service create --name nova --description \"OpenStack Compute\" compute"
-    ]
+# Create the nova user:
+execute 'nova_user' do
+    command "openstack user create --domain default --password \"#{node['openstack']['nova']['password']}\" #{node['openstack']['nova']['username']}"
+    environment admin_env
+end
+# Add the admin role to the nova user:
+execute 'bind_nova_user' do
+    command "openstack role add --project service --user #{node['openstack']['nova']['username']} admin"
+    environment admin_env
+end
+# Create the nova service entity:
+execute 'nova_service_entity' do
+    command "openstack service create --name nova --description \"OpenStack Compute\" compute"
     environment admin_env
 end
 
 # Create the Compute service API endpoints:
-execute 'glance_endpoints' do
-    command [
-        "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s",
-        "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s",
-        "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s"
-    ]
+execute 'nova_endpoint_public' do
+    command "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s"
+    environment admin_env
+end
+execute 'nova_endpoint_internal' do
+    command "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s"
+    environment admin_env
+end
+execute 'nova_endpoint_admin' do
+    command "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s"
     environment admin_env
 end
 # Populate the Compute databases:
+execute 'populate_nova_api_db' do
+    command "su -s /bin/sh -c \"nova-manage api_db sync\" nova"
+    environment admin_env
+end
 execute 'populate_nova_db' do
-    command [
-        "su -s /bin/sh -c \"nova-manage api_db sync\" nova",
-        "su -s /bin/sh -c \"nova-manage db sync\" nova"
-    ]
+    command "su -s /bin/sh -c \"nova-manage db sync\" nova"
     environment admin_env
 end
 # Finalize installation
@@ -266,25 +304,33 @@ end
 include_recipe "openstack::neutron"
 
 # create the service credentials
+# Create the neutron user:
 execute 'neutron_service_credentials' do
-    command [
-        # Create the neutron user:
-        "openstack user create --domain default --password \"#{node['openstack']['neutron']['password']}\" #{node['openstack']['neutron']['username']}",
-        # Add the admin role to the neutron user:
-        "openstack role add --project service --user #{node['openstack']['neutron']['username']} admin",
-        # Create the neutron service entity:
-        "openstack service create --name neutron --description \"OpenStack Networking\" network"
-    ]
+    command "openstack user create --domain default --password \"#{node['openstack']['neutron']['password']}\" #{node['openstack']['neutron']['username']}"
+    environment admin_env
+end
+# Add the admin role to the neutron user:
+execute 'bind_neutron_role' do
+    command "openstack role add --project service --user #{node['openstack']['neutron']['username']} admin"
+    environment admin_env
+end
+# Create the neutron service entity:
+execute 'neutron_service_entity' do
+    command "openstack service create --name neutron --description \"OpenStack Networking\" network"
     environment admin_env
 end
 
 # Create the Networking service API endpoints:
-execute 'neutron_endpoints' do
-    command [
-        "openstack endpoint create --region RegionOne network public http://controller:9696",
-        "openstack endpoint create --region RegionOne network internal http://controller:9696",
-        "openstack endpoint create --region RegionOne network admin http://controller:9696"
-    ]
+execute 'neutron_endpoint_public' do
+    command "openstack endpoint create --region RegionOne network public http://controller:9696"
+    environment admin_env
+end
+execute 'neutron_endpoint_internal' do
+    command "openstack endpoint create --region RegionOne network internal http://controller:9696"
+    environment admin_env
+end
+execute 'neutron_endpoint_admin' do
+    command "openstack endpoint create --region RegionOne network admin http://controller:9696"
     environment admin_env
 end
 
@@ -317,10 +363,11 @@ end
 
 # Verify operation
 execute 'neutron_loaded_extensionts' do
-    command [
-        "neutron ext-list",
-        "neutron agent-list"
-    ]
+    command "neutron ext-list"
+    environment admin_env
+end
+execute 'neutron_agent_list' do
+    command "neutron agent-list"
     environment admin_env
 end
 
