@@ -362,14 +362,14 @@ end
 
 
 # Verify operation
-execute 'neutron_loaded_extensionts' do
-    command "neutron ext-list"
-    environment admin_env
-end
-execute 'neutron_agent_list' do
-    command "neutron agent-list"
-    environment admin_env
-end
+# execute 'neutron_loaded_extensionts' do
+#     command "neutron ext-list"
+#     environment admin_env
+# end
+# execute 'neutron_agent_list' do
+#     command "neutron agent-list"
+#     environment admin_env
+# end
 
 ###########################
 # HORIZON
