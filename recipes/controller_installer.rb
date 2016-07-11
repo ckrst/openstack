@@ -253,15 +253,15 @@ end
 
 # Create the Compute service API endpoints:
 execute 'nova_endpoint_public' do
-    command "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s"
+    command "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 execute 'nova_endpoint_internal' do
-    command "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s"
+    command "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 execute 'nova_endpoint_admin' do
-    command "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s"
+    command "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 # Populate the Compute databases:
