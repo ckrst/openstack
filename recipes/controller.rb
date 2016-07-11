@@ -98,14 +98,24 @@ export OS_IMAGE_API_VERSION=2
 end
 
 
-# Nova
-# include_recipe "openstack::nova"
-#
-# # Neutron
-# include_recipe "openstack::neutron"
-#
-# # Dashboard
-# include_recipe "openstack::horizon"
-#
-# # Cinder
-# include_recipe "openstack::cinder"
+package 'memcached'
+
+file '/etc/memcached.conf' do
+    content'
+-d
+
+logfile /var/log/memcached.log
+
+-m 64
+
+-p 11211
+
+-u memcache
+
+-l 10.0.0.11
+'
+end
+
+service 'memcached' do
+    action [ :restart ]
+end
