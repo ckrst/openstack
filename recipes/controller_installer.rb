@@ -103,7 +103,7 @@ execute 'create_admin_project' do
 end
 # Create the admin user:
 execute 'create_admin_user' do
-    command "openstack user create --domain default --password \"#{node['openstack']['admin_password']}\" #{node['openstack']['admin_user']}",
+    command "openstack user create --domain default --password \"#{node['openstack']['admin_password']}\" #{node['openstack']['admin_user']}"
     environment keystone_test_env
 end
 
@@ -171,7 +171,7 @@ include_recipe 'openstack::glance'
 # create the service credentials
 # Create the glance user:
 execute 'glance_user' do
-    command "openstack user create --domain default --password \"#{node['openstack']['glance']['password']}\" #{node['openstack']['glance']['username']}",
+    command "openstack user create --domain default --password \"#{node['openstack']['glance']['password']}\" #{node['openstack']['glance']['username']}"
     environment admin_env
 end
 # Add the admin role to the glance user and service project:
