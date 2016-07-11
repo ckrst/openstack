@@ -16,8 +16,8 @@ admin_env = {
     "OS_USERNAME" => "admin",
     "OS_PASSWORD" => "secret",
     "OS_AUTH_URL" => "http://controller:35357/v3",
-    "OS_IDENTITY_API_VERSION" => 3,
-    "OS_IMAGE_API_VERSION" => 2
+    "OS_IDENTITY_API_VERSION" => "3",
+    "OS_IMAGE_API_VERSION" => "2"
 }
 
 user_env = {
