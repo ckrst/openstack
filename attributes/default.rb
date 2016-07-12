@@ -41,3 +41,7 @@ default['openstack']['nova']['db_name'] = 'nova'
 default['openstack']['nova_api']['db_name'] = 'nova_api'
 default['openstack']['nova']['db_user'] = 'nova'
 default['openstack']['nova']['db_pass'] = 'secret'
+
+default['openstack']['horizon']['db_name'] = 'dash'
+default['openstack']['horizon']['db_user'] = 'dash'
+default['openstack']['horizon']['db_pass'] = 'secret'

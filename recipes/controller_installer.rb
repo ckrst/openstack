@@ -377,6 +377,15 @@ end
 
 include_recipe "openstack::horizon"
 
+execute 'populate_horizon_db' do
+    command "/usr/share/openstack-dashboard/manage.py syncdb"
+    environment admin_env
+end
+
+service 'nova-api' do
+    action [ :reload ]
+end
+
 service 'apache2' do
     action [ :reload ]
 end

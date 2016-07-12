@@ -3,6 +3,39 @@ package 'openstack-dashboard' do
     options '-y --force-yes'
 end
 
+mysql_connection_info = {
+    :host     => node['openstack']['db']['host'],
+    :username => 'root',
+    :password => node['openstack']['db']['root_password']
+}
+
+mysql_database node['openstack']['horizon']['db_name'] do
+  connection mysql_connection_info
+  action :create
+end
+mysql_database_user node['openstack']['horizon']['db_user'] do
+  connection mysql_connection_info
+  password   node['openstack']['horizon']['db_pass']
+  action     :create
+end
+mysql_database_user node['openstack']['horizon']['db_user'] do
+  connection    mysql_connection_info
+  password      node['openstack']['horizon']['db_pass']
+  database_name node['openstack']['horizon']['db_name']
+  host          '%'
+  privileges    [:all]
+  action        :grant
+end
+mysql_database_user node['openstack']['horizon']['db_user'] do
+  connection    mysql_connection_info
+  password      node['openstack']['horizon']['db_pass']
+  database_name node['openstack']['horizon']['db_name']
+  host          'localhost'
+  privileges    [:all]
+  action        :grant
+end
+
+
 file '/etc/openstack-dashboard/local_settings.py' do
     content "
 import os
@@ -22,12 +55,24 @@ LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
 
 SECRET_KEY = secret_key.generate_or_read_from_file('/var/lib/openstack-dashboard/secret_key')
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+#
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': 'controller:11211',
+#     }
+# }
 
-CACHES = {
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+DATABASES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '#{node['openstack']['horizon']['db_name']}',
+        'USER': '#{node['openstack']['horizon']['db_user']}',
+        'PASSWORD': '#{node['openstack']['horizon']['db_pass']}',
+        'HOST': '#{node['openstack']['db']['host']}',
+        'default-character-set': 'utf8'
     }
 }
 
@@ -335,4 +380,8 @@ ALLOWED_HOSTS = ['*', ]
 COMPRESS_OFFLINE = True
 
 "
+end
+
+directory '/var/lib/dash/.blackhole' do
+    recursive true
 end
