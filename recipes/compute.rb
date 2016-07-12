@@ -115,11 +115,11 @@ end
 file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
     content '
 [linux_bridge]
-physical_interface_mappings = provider:eth0
+physical_interface_mappings = provider:eth1
 
 [vxlan]
 enable_vxlan = True
-local_ip = 10.0.0.31
+local_ip = 10.0.2.15
 l2_population = True
 
 [securitygroup]
