@@ -378,7 +378,7 @@ end
 include_recipe "openstack::horizon"
 
 execute 'populate_horizon_db' do
-    command "/usr/share/openstack-dashboard/manage.py syncdb --no-input"
+    command "/usr/share/openstack-dashboard/manage.py syncdb --noinput"
     environment admin_env
 end
 
