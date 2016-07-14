@@ -406,7 +406,7 @@ execute 'selfservice_network' do
 end
 
 execute 'selfservice_subnetwork' do
-    command "neutron subnet-create --name selfservice --dns-nameserver 8.8.8.8 --gateway 172.16.1.1 selfservice 172.16.1.0/24"
+    command "neutron subnet-create --name selfservice --dns-nameserver 8.8.8.8 --gateway 192.168.10.10 selfservice 192.168.10.0/24"
     environment admin_env
 end
 
