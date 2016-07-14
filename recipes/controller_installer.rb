@@ -410,6 +410,11 @@ execute 'selfservice_subnetwork' do
     environment admin_env
 end
 
+execute 'add_router_to_provider_network' do
+    command "neutron net-update provider --router:external"
+    environment admin_env
+end
+
 execute 'create_router' do
     command "neutron router-create router"
     environment admin_env
