@@ -1,7 +1,7 @@
 #
 
-hostsfile_entry '10.0.0.11' do
-    hostname 'controller'
+hostsfile_entry node['openstack']['nodes']['controller']['ipaddress'] do
+    hostname node['openstack']['nodes']['controller']['hostname']
     action :create_if_missing
 end
 

@@ -177,7 +177,7 @@ firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 
 [vxlan]
 enable_vxlan = True
-local_ip = 10.0.0.11
+local_ip = #{node['openstack']['nodes']['controller']['ipaddress']}
 l2_population = True
 "
 end

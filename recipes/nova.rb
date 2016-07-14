@@ -86,7 +86,7 @@ api_paste_config=/etc/nova/api-paste.ini
 enabled_apis=osapi_compute,metadata
 rpc_backend=rabbit
 auth_strategy = keystone
-my_ip=10.0.0.11
+my_ip=#{node['openstack']['nodes']['controller']['ipaddress']}
 use_neutron=True
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 

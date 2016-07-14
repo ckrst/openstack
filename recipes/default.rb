@@ -16,16 +16,16 @@ package 'mariadb-server'
 package ' python-pymysql'
 
 file '/etc/mysql/conf.d/openstack.cnf' do
-    content '
+    content "
 [mysqld]
-bind-address = 10.0.0.11
+bind-address = #{node['openstack']['nodes']['controller']['ipaddress']}
 
 [mysqld]
 default-storage-engine = innodb
 innodb_file_per_table
 collation-server = utf8_general_ci
 character-set-server = utf8
-'
+"
 end
 
 package 'mongodb-server'

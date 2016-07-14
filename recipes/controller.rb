@@ -7,6 +7,8 @@
 # All rights reserved - Do Not Redistribute
 #
 
+tag 'controllerNode'
+
 hostsfile_entry '10.0.0.31' do
     hostname 'compute1'
     action :create_if_missing
@@ -101,12 +103,12 @@ end
 package 'memcached'
 
 file '/etc/memcached.conf' do
-    content'
+    content "
 -d
 logfile /var/log/memcached.log
 -m 64
 -p 11211
 -u memcache
--l 10.0.0.11
-'
+-l #{node['openstack']['nodes']['controller']['ipaddress']}
+"
 end

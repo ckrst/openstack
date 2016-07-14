@@ -1,8 +1,8 @@
 tag 'computeNode'
 #
 
-hostsfile_entry '10.0.0.11' do
-    hostname 'controller'
+hostsfile_entry node['openstack']['nodes']['controller']['ipaddress'] do
+    hostname node['openstack']['nodes']['controller']['hostname']
     action :create_if_missing
 end
 
@@ -23,7 +23,7 @@ package 'nova-compute' do
 end
 
 file '/etc/nova/nova.conf' do
-    content '
+    content "
 [DEFAULT]
 dhcpbridge_flagfile=/etc/nova/nova.conf
 dhcpbridge=/usr/bin/nova-dhcpbridge
@@ -38,7 +38,7 @@ api_paste_config=/etc/nova/api-paste.ini
 enabled_apis=ec2,osapi_compute,metadata
 rpc_backend=rabbit
 auth_strategy=keystone
-my_ip=10.0.0.31
+my_ip=#{node['openstack']['nodes']['controller']['ipaddress']}
 use_neutron=True
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
@@ -80,7 +80,7 @@ region_name=RegionOne
 project_name=service
 username=neutron
 password=secret
-'
+"
 end
 
 file '/etc/nova/nova-compute.conf' do
