@@ -62,9 +62,9 @@ disk_formats = ami,ari,aki,vhd,vmdk,raw,qcow2,vdi,iso,root-tar
 
 [keystone_authtoken]
 
-auth_uri = http://controller:5000
-auth_url = http://controller:35357
-memcached_servers = controller:11211
+auth_uri = http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers = #{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type = password
 project_domain_name = default
 user_domain_name = default
@@ -113,9 +113,9 @@ connection = mysql+pymysql://#{node['openstack']['glance']['db_user']}:#{node['o
 
 [keystone_authtoken]
 
-auth_uri = http://controller:5000
-auth_url = http://controller:35357
-memcached_servers = controller:11211
+auth_uri = http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers = #{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type = password
 project_domain_name = default
 user_domain_name = default

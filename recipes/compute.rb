@@ -18,10 +18,15 @@ apt_repository 'cloudarchive-mitaka' do
     action [:add]
 end
 
+package 'python-openstackclient' do
+    options '--force-yes'
+end
+
 package 'nova-compute' do
     options '--force-yes'
 end
 
+# TODO my_ip
 file '/etc/nova/nova.conf' do
     content "
 [DEFAULT]
@@ -43,7 +48,7 @@ use_neutron=True
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 [oslo_messaging_rabbit]
-rabbit_host=controller
+rabbit_host=#{node['openstack']['nodes']['controller']['hostname']}
 rabbit_userid=openstack
 rabbit_password=secret
 
@@ -51,9 +56,9 @@ rabbit_password=secret
 os_region_name=RegionOne
 
 [keystone_authtoken]
-auth_uri=http://controller:5000
-auth_url=http://controller:35357
-memcached_servers=controller:11211
+auth_uri=http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url=http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers=#{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type=password
 project_domain_name=default
 user_domain_name=default
@@ -65,14 +70,14 @@ password=secret
 enabled=True
 vncserver_listen=0.0.0.0
 vncserver_proxyclient_address=$my_ip
-novncproxy_base_url=http://controller:6080/vnc_auto.html
+novncproxy_base_url=http://#{node['openstack']['nodes']['controller']['hostname']}:6080/vnc_auto.html
 
 [oslo_concurrency]
 lock_path=/var/lib/nova/tmp
 
 [neutron]
-url=http://controller:9696
-auth_url=http://controller:35357
+url=http://#{node['openstack']['nodes']['controller']['hostname']}:9696
+auth_url=http://#{node['openstack']['nodes']['controller']['hostname']}:35357
 auth_type=password
 project_domain_name=default
 user_domain_name=default
@@ -86,8 +91,9 @@ end
 file '/etc/nova/nova-compute.conf' do
     content '[DEFAULT]
 compute_driver=libvirt.LibvirtDriver
+
 [libvirt]
-virt_type=qemu
+virt_type=kvm
 '
 end
 
@@ -115,12 +121,12 @@ root_helper=sudo /usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf
 
 [database]
 
-connection=sqlite:////var/lib/neutron/neutron.sqlite
+# connection=sqlite:////var/lib/neutron/neutron.sqlite
 
 [keystone_authtoken]
-auth_uri=http://controller:5000
-auth_url=http://controller:35357
-memcached_servers=controller:11211
+auth_uri=http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url=http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers=#{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type=password
 project_domain_name=default
 user_domain_name=default
@@ -139,7 +145,7 @@ password=#{node['openstack']['neutron']['password']}
 [oslo_messaging_notifications]
 
 [oslo_messaging_rabbit]
-rabbit_host=controller
+rabbit_host=#{node['openstack']['nodes']['controller']['hostname']}
 rabbit_userid=openstack
 rabbit_password=secret
 
@@ -151,6 +157,8 @@ rabbit_password=secret
 "
 end
 
+# TODO physical interface
+# TODO local_ip
 file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
     content '
 [DEFAULT]
@@ -158,7 +166,7 @@ file '/etc/neutron/plugins/ml2/linuxbridge_agent.ini' do
 [agent]
 
 [linux_bridge]
-physical_interface_mappings=provider:eth1
+physical_interface_mappings=provider:p1p1
 
 [securitygroup]
 enable_security_group=True
@@ -166,7 +174,7 @@ firewall_driver=neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 
 [vxlan]
 enable_vxlan=True
-local_ip=10.0.0.31
+local_ip=10.40.31.31
 l2_population=True
 '
 end

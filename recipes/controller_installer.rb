@@ -5,7 +5,7 @@
 
 keystone_test_env = {
     "OS_TOKEN"                  => node['openstack']['admin_token'],
-    "OS_URL"                    => "http://controller:35357/v3",
+    "OS_URL"                    => "http://#{node['openstack']['nodes']['controller']['hostname']}:35357/v3",
     "OS_IDENTITY_API_VERSION"   => "3"
 }
 
@@ -15,7 +15,7 @@ admin_env = {
     "OS_PROJECT_NAME" => "admin",
     "OS_USERNAME" => node['openstack']['admin_user'],
     "OS_PASSWORD" => node['openstack']['admin_password'],
-    "OS_AUTH_URL" => "http://controller:35357/v3",
+    "OS_AUTH_URL" => "http://#{node['openstack']['nodes']['controller']['hostname']}:35357/v3",
     "OS_IDENTITY_API_VERSION" => "3",
     "OS_IMAGE_API_VERSION" => "2"
 }
@@ -26,7 +26,7 @@ user_env = {
     "OS_PROJECT_NAME" => "demo",
     "OS_USERNAME" => "demo",
     "OS_PASSWORD" => "secret",
-    "OS_AUTH_URL" => "http://controller:5000/v3",
+    "OS_AUTH_URL" => "http://#{node['openstack']['nodes']['controller']['hostname']}:5000/v3",
     "OS_IDENTITY_API_VERSION" => "3",
     "OS_IMAGE_API_VERSION" => "2"
 }
@@ -74,15 +74,15 @@ end
 
 # Create the Identity service API endpoints
 execute 'create_keystone_public_endpoint' do
-    command 'openstack endpoint create --region RegionOne identity public http://controller:5000/v3'
+    command "openstack endpoint create --region RegionOne identity public http://#{node['openstack']['nodes']['controller']['hostname']}:5000/v3"
     environment keystone_test_env
 end
 execute 'create_keystone_internal_endpoint' do
-    command 'openstack endpoint create --region RegionOne identity internal http://controller:5000/v3'
+    command "openstack endpoint create --region RegionOne identity internal http://#{node['openstack']['nodes']['controller']['hostname']}:5000/v3"
     environment keystone_test_env
 end
 execute 'create_keystone_admin_endpoint' do
-    command 'openstack endpoint create --region RegionOne identity admin http://controller:35357/v3'
+    command "openstack endpoint create --region RegionOne identity admin http://#{node['openstack']['nodes']['controller']['hostname']}:35357/v3"
     environment keystone_test_env
 end
 
@@ -187,15 +187,15 @@ end
 
 # Create the Image service API endpoints:
 execute 'glance_endpoint_public' do
-    command "openstack endpoint create --region RegionOne image public http://controller:9292"
+    command "openstack endpoint create --region RegionOne image public http://#{node['openstack']['nodes']['controller']['hostname']}:9292"
     environment admin_env
 end
 execute 'glance_endpoint_internal' do
-    command "openstack endpoint create --region RegionOne image internal http://controller:9292"
+    command "openstack endpoint create --region RegionOne image internal http://#{node['openstack']['nodes']['controller']['hostname']}:9292"
     environment admin_env
 end
 execute 'glance_endpoint_admin' do
-    command "openstack endpoint create --region RegionOne image admin http://controller:9292"
+    command "openstack endpoint create --region RegionOne image admin http://#{node['openstack']['nodes']['controller']['hostname']}:9292"
     environment admin_env
 end
 
@@ -253,15 +253,15 @@ end
 
 # Create the Compute service API endpoints:
 execute 'nova_endpoint_public' do
-    command "openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\\(tenant_id\\)s"
+    command "openstack endpoint create --region RegionOne compute public http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 execute 'nova_endpoint_internal' do
-    command "openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\\(tenant_id\\)s"
+    command "openstack endpoint create --region RegionOne compute internal http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 execute 'nova_endpoint_admin' do
-    command "openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\\(tenant_id\\)s"
+    command "openstack endpoint create --region RegionOne compute admin http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
     environment admin_env
 end
 # Populate the Compute databases:
@@ -291,10 +291,10 @@ service 'nova-novncproxy' do
 end
 
 # Verify operation
-execute 'verify_nova_operation' do
-    command "openstack compute service list"
-    environment admin_env
-end
+# execute 'verify_nova_operation' do
+#     command "openstack compute service list"
+#     environment admin_env
+# end
 
 
 ###########################
@@ -322,15 +322,15 @@ end
 
 # Create the Networking service API endpoints:
 execute 'neutron_endpoint_public' do
-    command "openstack endpoint create --region RegionOne network public http://controller:9696"
+    command "openstack endpoint create --region RegionOne network public http://#{node['openstack']['nodes']['controller']['hostname']}:9696"
     environment admin_env
 end
 execute 'neutron_endpoint_internal' do
-    command "openstack endpoint create --region RegionOne network internal http://controller:9696"
+    command "openstack endpoint create --region RegionOne network internal http://#{node['openstack']['nodes']['controller']['hostname']}:9696"
     environment admin_env
 end
 execute 'neutron_endpoint_admin' do
-    command "openstack endpoint create --region RegionOne network admin http://controller:9696"
+    command "openstack endpoint create --region RegionOne network admin http://#{node['openstack']['nodes']['controller']['hostname']}:9696"
     environment admin_env
 end
 

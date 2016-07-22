@@ -53,13 +53,13 @@ package 'neutron-l3-agent' do
 end
 
 file '/etc/neutron/metadata_agent.ini' do
-    content '
+    content "
 [DEFAULT]
-nova_metadata_ip = controller
+nova_metadata_ip = #{node['openstack']['nodes']['controller']['hostname']}
 metadata_proxy_shared_secret = secret
 
 [AGENT]
-'
+"
 end
 
 file '/etc/neutron/neutron.conf' do
@@ -88,9 +88,9 @@ connection = mysql+pymysql://#{node['openstack']['neutron']['db_user']}:#{node['
 
 [keystone_authtoken]
 
-auth_uri = http://controller:5000
-auth_url = http://controller:35357
-memcached_servers = controller:11211
+auth_uri = http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers = #{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type = password
 project_domain_name = default
 user_domain_name = default
@@ -102,7 +102,7 @@ password = #{node['openstack']['neutron']['password']}
 
 [nova]
 
-auth_url = http://controller:35357
+auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
 auth_type = password
 project_domain_name = default
 user_domain_name = default
@@ -119,7 +119,7 @@ password = #{node['openstack']['nova']['password']}
 
 [oslo_messaging_rabbit]
 
-rabbit_host = controller
+rabbit_host = #{node['openstack']['nodes']['controller']['hostname']}
 rabbit_userid = openstack
 rabbit_password = secret
 

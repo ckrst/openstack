@@ -189,10 +189,6 @@ link '/etc/apache2/sites-enabled/wsgi-keystone.conf' do
   link_type :symbolic
 end
 
-service "apache2" do
-  action [:restart]
-end
-
 # By default, the Ubuntu packages create an SQLite database. Because this configuration uses an SQL database server, you can remove the SQLite database file:
 file '/var/lib/keystone/keystone.db' do
     action :delete

@@ -3,9 +3,12 @@ default['openstack']['admin_token'] = '71e444e5726be697906c'
 default['openstack']['admin_user'] = 'cloudroot'
 default['openstack']['admin_password'] = 'adminPass'
 
+default['openstack']['release'] = 'mitaka'
+
 #Networing
 default['openstack']['nodes']['controller']['ipaddress'] = '10.0.0.11'
 default['openstack']['nodes']['controller']['hostname'] = 'controller'
+
 default['openstack']['nodes']['compute'][0]['ipaddress'] = '10.0.0.31'
 
 default['openstack']['db']['root_password'] = 'secret'

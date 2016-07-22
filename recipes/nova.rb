@@ -97,7 +97,7 @@ connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['ope
 connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova']['db_name']}
 
 [oslo_messaging_rabbit]
-rabbit_host=controller
+rabbit_host=#{node['openstack']['nodes']['controller']['hostname']}
 rabbit_userid=openstack
 rabbit_password=secret
 
@@ -105,9 +105,9 @@ rabbit_password=secret
 lock_path = /var/lib/nova/tmp
 
 [keystone_authtoken]
-auth_uri=http://controller:5000
-auth_url=http://controller:35357
-memcached_servers=controller:11211
+auth_uri=http://#{node['openstack']['nodes']['controller']['hostname']}:5000
+auth_url=http://#{node['openstack']['nodes']['controller']['hostname']}:35357
+memcached_servers=#{node['openstack']['nodes']['controller']['hostname']}:11211
 auth_type=password
 project_domain_name=default
 user_domain_name=default
@@ -120,11 +120,11 @@ vncserver_listen = $my_ip
 vncserver_proxyclient_address = $my_ip
 
 [glance]
-api_servers = http://controller:9292
+api_servers = http://#{node['openstack']['nodes']['controller']['hostname']}:9292
 
 [neutron]
-url = http://controller:9696
-auth_url = http://controller:35357
+url = http://#{node['openstack']['nodes']['controller']['hostname']}:9696
+auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
 auth_type = password
 project_domain_name = default
 user_domain_name = default
