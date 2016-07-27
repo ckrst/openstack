@@ -37,6 +37,16 @@ user_env = {
     "OS_IMAGE_API_VERSION" => "2"
 }
 
+# just a control dir
+directory '/root/.osc' do
+  owner 'root'
+  group 'root'
+  mode 00755
+  recursive true
+  action :create
+end
+
+
 include_recipe "chrony"
 
 

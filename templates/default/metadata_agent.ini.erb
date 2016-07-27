@@ -1,0 +1,5 @@
+[DEFAULT]
+nova_metadata_ip = <%= node['openstack']['nodes']['controller']['hostname'] %>
+metadata_proxy_shared_secret = secret
+
+[AGENT]

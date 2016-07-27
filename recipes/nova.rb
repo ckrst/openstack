@@ -1,5 +1,16 @@
 tag 'nova'
 
+admin_env = {
+    "OS_PROJECT_DOMAIN_NAME" => "default",
+    "OS_USER_DOMAIN_NAME" => "default",
+    "OS_PROJECT_NAME" => "admin",
+    "OS_USERNAME" => node['openstack']['admin_user'],
+    "OS_PASSWORD" => node['openstack']['admin_password'],
+    "OS_AUTH_URL" => "http://#{node['openstack']['nodes']['controller']['hostname']}:35357/v3",
+    "OS_IDENTITY_API_VERSION" => "3",
+    "OS_IMAGE_API_VERSION" => "2"
+}
+
 mysql_connection_info = {
     :host     => node['openstack']['db']['host'],
     :username => 'root',
@@ -69,73 +80,73 @@ package 'nova-scheduler' do
     options '-y --force-yes'
 end
 
-file '/etc/nova/nova.conf' do
-    content "
-[DEFAULT]
-dhcpbridge_flagfile=/etc/nova/nova.conf
-dhcpbridge=/usr/bin/nova-dhcpbridge
-logdir=/var/log/nova
-state_path=/var/lib/nova
-lock_path=/var/lock/nova
-force_dhcp_release=True
-libvirt_use_virtio_for_bridges=True
-verbose=True
-ec2_private_dns_show_ip=True
-api_paste_config=/etc/nova/api-paste.ini
-# enabled_apis=ec2,osapi_compute,metadata
-enabled_apis=osapi_compute,metadata
-rpc_backend=rabbit
-auth_strategy = keystone
-my_ip=#{node['openstack']['nodes']['controller']['ipaddress']}
-use_neutron=True
-firewall_driver=nova.virt.firewall.NoopFirewallDriver
+service 'nova-api'
+service 'nova-consoleauth'
+service 'nova-scheduler'
+service 'nova-conductor'
+service 'nova-novncproxy'
 
-cpu_allocation_ratio=8.0
+template "/etc/nova/nova.conf" do
+    source 'nova.conf.controller.erb'
+    mode '0644'
+    owner 'root'
+    group 'root'
+end
 
-[api_database]
-connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova_api']['db_name']}
+# Add the admin role to the nova user: (to be executed after nova_user)
+execute 'bind_nova_user' do
+    command "openstack role add --project service --user #{node['openstack']['nova']['username']} admin"
+    environment admin_env
+    action :nothing
+end
 
-[database]
-connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova']['db_name']}
+# create the service credentials
+# Create the nova user:
+execute 'nova_user' do
+    command "openstack user create --domain default --password \"#{node['openstack']['nova']['password']}\" #{node['openstack']['nova']['username']}"
+    environment admin_env
+    not_if "openstack user show #{node['openstack']['nova']['username']}"
+    notifies :run, "execute[bind_nova_user]", :immediately
+end
 
-[oslo_messaging_rabbit]
-rabbit_host=#{node['openstack']['nodes']['controller']['hostname']}
-rabbit_userid=openstack
-rabbit_password=secret
 
-[oslo_concurrency]
-lock_path = /var/lib/nova/tmp
+# Create the nova service entity:
+execute 'nova_service_entity' do
+    command "openstack service create --name nova --description \"OpenStack Compute\" compute"
+    environment admin_env
+    not_if "openstack service show compute"
+end
 
-[keystone_authtoken]
-auth_uri=http://#{node['openstack']['nodes']['controller']['hostname']}:5000
-auth_url=http://#{node['openstack']['nodes']['controller']['hostname']}:35357
-memcached_servers=#{node['openstack']['nodes']['controller']['hostname']}:11211
-auth_type=password
-project_domain_name=default
-user_domain_name=default
-project_name=service
-username = #{node['openstack']['nova']['username']}
-password = #{node['openstack']['nova']['password']}
+# Create the Compute service API endpoints:
+execute 'nova_endpoint_public' do
+    command "openstack endpoint create --region RegionOne compute public http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
+    environment admin_env
+    not_if "openstack endpoint list --service compute --interface public | grep public"
+end
+execute 'nova_endpoint_internal' do
+    command "openstack endpoint create --region RegionOne compute internal http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
+    environment admin_env
+    not_if "openstack endpoint list --service compute --interface internal | grep internal"
+end
+execute 'nova_endpoint_admin' do
+    command "openstack endpoint create --region RegionOne compute admin http://#{node['openstack']['nodes']['controller']['hostname']}:8774/v2.1/%\\(tenant_id\\)s"
+    environment admin_env
+    not_if "openstack endpoint list --service compute --interface admin | grep admin"
+end
 
-[vnc]
-vncserver_listen = $my_ip
-vncserver_proxyclient_address = $my_ip
-
-[glance]
-api_servers = http://#{node['openstack']['nodes']['controller']['hostname']}:9292
-
-[neutron]
-url = http://#{node['openstack']['nodes']['controller']['hostname']}:9696
-auth_url = http://#{node['openstack']['nodes']['controller']['hostname']}:35357
-auth_type = password
-project_domain_name = default
-user_domain_name = default
-region_name = RegionOne
-project_name = service
-username = #{node['openstack']['neutron']['username']}
-password = #{node['openstack']['neutron']['password']}
-
-service_metadata_proxy = True
-metadata_proxy_shared_secret = secret
-"
+# Populate the Compute databases:
+execute 'populate_nova_api_db' do
+    command "su -s /bin/sh -c \"nova-manage api_db sync\" nova  && touch /root/.osc/nova_api_db_ok"
+    environment admin_env
+    not_if { File.exists?("/root/.osc/nova_api_db_ok") }
+end
+execute 'populate_nova_db' do
+    command "su -s /bin/sh -c \"nova-manage db sync\" nova && touch /root/.osc/nova_db_ok"
+    environment admin_env
+    not_if { File.exists?("/root/.osc/nova_db_ok") }
+    notifies :restart, 'service[nova-api]', :immediately
+    notifies :restart, 'service[nova-consoleauth]', :immediately
+    notifies :restart, 'service[nova-scheduler]', :immediately
+    notifies :restart, 'service[nova-conductor]', :immediately
+    notifies :restart, 'service[nova-novncproxy]', :immediately
 end
