@@ -390,6 +390,12 @@ service 'apache2' do
     action [ :reload ]
 end
 
+
+#########################
+#
+#########################
+
+
 execute 'provider_network' do
     command "neutron net-create --shared --provider:physical_network provider --provider:network_type flat provider"
     environment admin_env

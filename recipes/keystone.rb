@@ -138,6 +138,12 @@ Distribution = Ubuntu
 "
 end
 
+# Populate the Identity service database
+execute 'populate_keystone' do
+    command "su -s /bin/sh -c \"keystone-manage db_sync\" #{node['openstack']['keystone']['db_name']}"
+    action :nothing
+end
+
 #APACHE
 package 'apache2' do
     options '--force-yes'

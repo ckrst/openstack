@@ -90,6 +90,8 @@ my_ip=#{node['openstack']['nodes']['controller']['ipaddress']}
 use_neutron=True
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
+cpu_allocation_ratio=8.0
+
 [api_database]
 connection = mysql+pymysql://#{node['openstack']['nova']['db_user']}:#{node['openstack']['nova']['db_pass']}@#{node['openstack']['db']['host']}/#{node['openstack']['nova_api']['db_name']}
 
