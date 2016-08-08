@@ -6,6 +6,10 @@ describe 'openstack::controller' do
         ChefSpec::SoloRunner.new(platform: 'ubuntu', version: '14.04', log_level: :fatal).converge(described_recipe)
     }
 
+    before do
+         stub_search("node", "recipes:chrony\\:\\:master").and_return(nil)
+    end
+
     it 'converges successfully' do
         expect { chef_run }.to_not raise_error
     end

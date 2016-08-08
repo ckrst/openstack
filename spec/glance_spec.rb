@@ -7,7 +7,7 @@ describe 'openstack::glance' do
     }
 
     before do
-        stub_command("openstack user show glance").and_return(0)
+        stub_command("openstack user show glance").and_return(1)
         stub_command("openstack service show glance").and_return(1)
         stub_command("openstack endpoint list --service glance --interface public | grep public").and_return(1)
         stub_command("openstack endpoint list --service glance --interface internal | grep internal").and_return(1)
@@ -44,70 +44,72 @@ describe 'openstack::glance' do
         expect(chef_run).to create_template("/etc/glance/glance-registry.conf")
     end
 
-    # it 'run_execute("bind_glance_role")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("bind_glance_role")
-    # end
+    it 'run_execute("bind_glance_role")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("bind_glance_role")
+    end
 
     it 'run_execute("glance_user")' do
         chef_run.converge(described_recipe)
-        expect(chef_run).to run_execute("glance_user")
+        expect(chef_run).not_to run_execute("glance_user")
     end
 
-    # it 'run_execute("glance_service_entity")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("glance_service_entity")
-    # end
-    #
-    # it 'run_execute("glance_endpoint_public")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("glance_endpoint_public")
-    # end
-    #
-    # it 'run_execute("glance_endpoint_internal")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("glance_endpoint_internal")
-    # end
-    #
-    # it 'run_execute("glance_endpoint_admin")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("glance_endpoint_admin")
-    # end
-    #
+    it 'run_execute("glance_service_entity")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("glance_service_entity")
+    end
+
+    it 'run_execute("glance_endpoint_public")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("glance_endpoint_public")
+    end
+
+    it 'run_execute("glance_endpoint_internal")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("glance_endpoint_internal")
+    end
+
+    it 'run_execute("glance_endpoint_admin")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("glance_endpoint_admin")
+    end
+
     # it 'create_service("glance-registry")' do
     #     chef_run.converge(described_recipe)
     #     expect(chef_run).to create_service("glance-registry")
+    #     expect(chef_run).to enable_service("glance-registry")
     # end
     #
     # it 'create_service("glance-api")' do
     #     chef_run.converge(described_recipe)
     #     expect(chef_run).to create_service("glance-api")
+    #     expect(chef_run).to enable_service("glance-api")
     # end
-    #
-    # it 'run_execute("populate_glance")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("populate_glance")
-    # end
-    #
-    # it 'create_directory("/glance_images")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to create_directory("/glance_images")
-    # end
-    #
-    # it 'create_remote_file("/glance_images/trusty-server-cloudimg-amd64-disk1.img")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to create_remote_file("/glance_images/trusty-server-cloudimg-amd64-disk1.img")
-    # end
-    #
-    # it 'run_execute("import_ubuntu")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("import_ubuntu")
-    # end
-    #
-    # it 'run_execute("glance_image_list")' do
-    #     chef_run.converge(described_recipe)
-    #     expect(chef_run).to run_execute("glance_image_list")
-    # end
+
+    it 'run_execute("populate_glance")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).to run_execute("populate_glance")
+    end
+
+    it 'create_directory("/glance_images")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).to create_directory("/glance_images")
+    end
+
+    it 'create_remote_file("/glance_images/trusty-server-cloudimg-amd64-disk1.img")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).to create_remote_file("/glance_images/trusty-server-cloudimg-amd64-disk1.img")
+    end
+
+    it 'run_execute("import_ubuntu")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).not_to run_execute("import_ubuntu")
+    end
+
+    it 'run_execute("glance_image_list")' do
+        chef_run.converge(described_recipe)
+        expect(chef_run).to run_execute("glance_image_list")
+    end
 
 
 

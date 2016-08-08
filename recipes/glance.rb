@@ -104,8 +104,12 @@ execute 'glance_endpoint_admin' do
     not_if "openstack endpoint list --service glance --interface admin | grep admin"
 end
 
-service 'glance-registry'
-service 'glance-api'
+service 'glance-registry' do
+    action [:start, :enable]
+end
+service 'glance-api' do
+    action [:start, :enable]
+end
 
 # Populate the Image service database:
 execute 'populate_glance' do
